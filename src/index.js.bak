@@ -8,14 +8,15 @@ const {
 	mkdir,
 } = fs.promises;
 
-const from = 'https://undercards.net/Leaderboard?action=friendship';
+const allCardsFrom = "https://undercards.net/AllCards"
+const from = 'https://undercards.net/Leaderboard?action=ranked';
 
-const safeReadData = ['xp', 'idCard', ];
+const safeReadData = ['id', 'username', 'winsRanked', 'lossesRanked', 'division', 'level', 'eloRanked'];
 
 function loadChanges(type = 'daily', skipCommit = '') {
 	const rankingsPath = `./data/rankings-${type}.json`;
 	return needle(from)
-	// Parse the leaderboard
+	// Parse the cards
 	.then((res) => JSON.parse(res.body.leaderboard))
 	// Trim excess data
 	.then((rankings = []) => rankings.map((data) => safeReadData.reduce((ret, key) => (ret[key] = data[key], ret), {})))

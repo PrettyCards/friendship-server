@@ -8,6 +8,7 @@ const {
 	mkdir,
 } = fs.promises;
 
+const allCardsFrom = "https://undercards.net/AllCards"
 const from = 'https://undercards.net/Leaderboard?action=ranked';
 
 const safeReadData = ['id', 'username', 'winsRanked', 'lossesRanked', 'division', 'level', 'eloRanked'];
@@ -15,8 +16,8 @@ const safeReadData = ['id', 'username', 'winsRanked', 'lossesRanked', 'division'
 function loadChanges(type = 'daily', skipCommit = '') {
 	const rankingsPath = `./data/rankings-${type}.json`;
 	return needle(from)
-	// Parse the leaderboard
-	.then((res) => JSON.parse(res.body.leaderboard))
+	// Parse the cards
+	.then((res) => JSON.parse(res.body.cards))
 	// Trim excess data
 	.then((rankings = []) => rankings.map((data) => safeReadData.reduce((ret, key) => (ret[key] = data[key], ret), {})))
 	// Load old rankings
