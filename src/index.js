@@ -54,13 +54,13 @@ function getDataForNextIndex(resolve) {
 		return;
 	}
 	numOfReq++;
-	var cardId = validCards[index].id;
+	var cardId = validCards[reqIndex].id;
 	needle(fromPrefix + cardId).then(function (data) {
 		var lb = JSON.parse(data.body.leaderboard);
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
 		}
-		console.log("Data processed for: ", validCards[index].name);
+		console.log("Data processed for: ", validCards[reqIndex].name);
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
 		numOfReq--;
 		getDataForNextIndex(resolve);
