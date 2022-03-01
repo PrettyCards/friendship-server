@@ -9,110 +9,36 @@ const {
 } = fs.promises;
 
 const allCardsFrom = "https://undercards.net/AllCards"
-const from = 'https://undercards.net/Leaderboard?action=ranked';
+const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=";
 
-const safeReadData = ['id', 'username', 'winsRanked', 'lossesRanked', 'division', 'level', 'eloRanked'];
+var validCards = [];
 
 function loadChanges(type = 'daily', skipCommit = '') {
-	const rankingsPath = `./data/rankings-${type}.json`;
-	return needle(from)
-	// Parse the cards
-	.then((res) => JSON.parse(res.body.cards))
-	// Trim excess data
-	.then((rankings = []) => rankings.map((data) => safeReadData.reduce((ret, key) => (ret[key] = data[key], ret), {})))
-	// Load old rankings
-	.then((rankings = []) => access(rankingsPath, fs.constants.F_OK | fs.constants.W_OK)
-		// Parse old rankings
-		.then(() => readFile(rankingsPath).then(JSON.parse))
-		.catch((e) => {
-		if (e.code !== 'ENOENT') {
-			throw new Error('Not writable'); // Shouldn't ever happen, really.
-		}
-		})
-		// Convert to lookup-by-id
-		.then((old = []) => old.reduce((ret, val, i) => (val.position = i, ret[val.id] = val, ret), {}))
-		.then((old = {}) => {
-		rankings.forEach((data, position) => {
-			// Calculate rank change and elo change
-			const prev = old[data.id];
-			if (prev) {
-			data.eloChange = data.eloRanked - prev.eloRanked; // Higher elo is better
-			data.rankChange = prev.position - position; // Lower position is better
-			data.wins = data.winsRanked - prev.winsRanked;
-			data.losses = data.lossesRanked - prev.lossesRanked;
+	return needle(allCardsFrom).then(function (data) {
+		var allCards = JSON.parse(data.body.cards);
+		// Get all valid cards for Friendship Data.
+		validCards = [];
+		for (var i=0; i < allCards.length; i++) {
+			var card = allCards[i];
+			if (card.typeCard === 0 && card.rarity !== "TOKEN") {
+				//console.log(card.name);
+				validCards.push(card);
 			}
-			data.rank = position + 1;
-			// data.bestRank = Math.min(position, prev ? prev.bestRank : Infinity);
-			// data.eloBest = Math.max(data.eloRanked, prev ? prev.eloBest : 0);
-		});
-		return rankings;
-		})
-		.then((rankings = []) => skipCommit ? rankings : Promise.all(rankings.map((data) => writeFile(`./data/users/${data.id}.json`, JSON.stringify(data, undefined, 2))))
-			.then(() => rankings))
-		.then((rankings = []) => skipCommit ? rankings : writeFile(rankingsPath, JSON.stringify(rankings, undefined, 2))
-		.then(() => rankings))
-		.then((rankings = []) => {
-		const columns = [{
-			key: 'rank',
-			format: (text = '', { rankChange }) => change(text, rankChange),
-		}, {
-			key: 'level',
-			name: 'LV',
-		}, {
-			key: 'username',
-			name: 'Player',
-			format: (text = '', { id }) => `<span title="ID: ${id}">${text}</span>`,
-		}, {
-			key: 'division',
-			format: (text = '') => text.replace('_', ' '),
-		}, {
-			key: 'eloRanked',
-			name: 'Elo',
-			format: (text = '', { eloChange }) => change(text, eloChange),
-		}, {
-			key: 'winsRanked',
-			name: 'Wins',
-			format: (text = '', { wins }) => change(text, wins),
-		}, {
-			key: 'lossesRanked',
-			name: 'Losses',
-			format: (text = '', { losses }) => change(text, losses),
-		}];
-
-		const top5 = [
-			`---`,
-			`title: ${capitalize(type)} Update`,
-			'layout: leaderboard',
-			`category: ${type}`,
-			`---`,
-			'',
-			'{: .leaderboard}',
-			`| ${columns.map(({ name = '', key = '' }) => name || capitalize(key)).join(' | ')} |`,
-			`| ${columns.map(() => '---').join(' | ')} |`,
-			`${rankings.slice(0, 5).map((entry) => `| ${columns.map(({ 
-			key = '',
-			format = (text, entry) => text,
-			}) => format(entry[key], entry)).join(' | ')} |`).join('\n')}`,
-		].join('\n');
-
-		// Save post
-		const slug = Math.floor(Date.now() / 1000);
-		const postData = `./docs/assets/data/${type}`;
-		const postPath = `./docs/_${type}`;
-		return mkdir(postData, {
-			recursive: true,
-		}).then(() => writeFile(`${postData}/${slug}.json`, JSON.stringify(rankings))).then(() => mkdir(postPath, {
-			recursive: true,
-		}).then(() => writeFile(`${postPath}/${slug}.md`, top5)));
-		}));
+		}
+		getDataForIndex(0);
+	});
 }
 
-function capitalize(text = '') {
-	return text[0].toUpperCase() + text.substring(1);
-}
-
-function change(text, data) {
-	return `<span data-change="${data === undefined ? '-' : data}">${text}</span>`;
+function getDataForIndex(index) {
+	if (index >= validCards.length) {
+		return;
+	}
+	var cardId = validCards[index].id;
+	needle(fromPrefix + cardId).then(function (data) {
+		var lb = JSON.parse(data.body.leaderboard);
+		console.log(validCards[index].name, lb[0]);
+		getDataForIndex(index+1);
+	});
 }
 
 loadChanges(...process.argv.slice(2)).catch((e) => {
