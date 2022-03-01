@@ -47,7 +47,7 @@ function loadChanges(type = 'daily', skipCommit = '') {
 }
 
 function getDataForNextIndex(resolve) {
-	if (index >= validCards.length) {
+	if (reqIndex >= validCards.length) {
 		if (numOfReq <= 0) {
 			resolve(index);
 		}
