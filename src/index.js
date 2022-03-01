@@ -14,6 +14,10 @@ const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=
 var validCards = [];
 var usersData = {};
 
+const maxNumOfReq = 5;
+var numOfReq = 0;
+var reqIndex = 0;
+
 function loadChanges(type = 'daily', skipCommit = '') {
 	return needle(allCardsFrom).then(function (data) {
 		var allCards = JSON.parse(data.body.cards);
@@ -27,8 +31,9 @@ function loadChanges(type = 'daily', skipCommit = '') {
 				validCards.push(card);
 			}
 		}
+		reqIndex = 0;
 		var lbPromise = new Promise((resolve, reject) => {
-			getDataForIndex(0, resolve);
+			getDataForNextIndex(resolve);
 		});
 		
 		lbPromise.then(function () {
@@ -41,11 +46,14 @@ function loadChanges(type = 'daily', skipCommit = '') {
 	});
 }
 
-function getDataForIndex(index, resolve) {
+function getDataForNextIndex(resolve) {
 	if (index >= validCards.length) {
-		resolve(index);
+		if (numOfReq <= 0) {
+			resolve(index);
+		}
 		return;
 	}
+	numOfReq++;
 	var cardId = validCards[index].id;
 	needle(fromPrefix + cardId).then(function (data) {
 		var lb = JSON.parse(data.body.leaderboard);
@@ -53,8 +61,10 @@ function getDataForIndex(index, resolve) {
 			addLbDataToUser(lb[i], i+1);
 		}
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
-		getDataForIndex(index+1, resolve);
+		numOfReq--;
+		getDataForNextIndex(resolve);
 	});
+	reqIndex++;
 }
 
 function addLbDataToUser(data, rank) {
