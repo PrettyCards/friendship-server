@@ -60,6 +60,7 @@ function getDataForNextIndex(resolve) {
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
 		}
+		console.log("Data processed for: ", validCards[index].name);
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
 		numOfReq--;
 		getDataForNextIndex(resolve);
