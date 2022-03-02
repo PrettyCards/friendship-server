@@ -12,6 +12,7 @@
   "author": "CMD_God",
   "license": "MIT",
   "dependencies": {
+    "better-queue": "^3.8.10",
     "needle": "^2.5.2"
   },
   "devDependencies": {

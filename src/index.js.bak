@@ -1,5 +1,6 @@
 const fs = require('fs');
 const needle = require('needle');
+const queue = require('better-queue');
 	
 const {
 	access,
@@ -8,7 +9,7 @@ const {
 	mkdir,
 } = fs.promises;
 
-const allCardsFrom = "https://undercards.net/AllCards"
+const allCardsFrom = "https://undercards.net/AllCards";
 const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=";
 
 var validCards = [];
@@ -41,7 +42,6 @@ function loadChanges(type = 'daily', skipCommit = '') {
 		lbPromise.then(function () {
 			console.log("All leaderboard data processed!");
 			writeFiles();
-			console.log("All files written!");
 		});
 	});
 }
@@ -49,7 +49,7 @@ function loadChanges(type = 'daily', skipCommit = '') {
 function getDataForNextIndex(resolve) {
 	if (reqIndex >= validCards.length) {
 		if (numOfReq <= 0) {
-			resolve(index);
+			resolve();
 		}
 		return;
 	}
@@ -85,11 +85,18 @@ function addLbDataToUser(data, rank) {
 }
 
 function writeFiles() {
-	for (var key in usersData) {
+	var q = new queue(function(key, cb) {
 		fs.writeFile("data/" + key + ".json", JSON.stringify(usersData[key]), function (err) {
 			if (err) throw err;
+			cb(null, err);
 		});
+	});
+	for (var key in usersData) {
+		q.push(key);
 	}
+	q.on("finish", function() {
+		console.log("All files written!");
+	});
 }
 
 loadChanges(...process.argv.slice(2)).catch((e) => {
