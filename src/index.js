@@ -33,15 +33,15 @@ function loadChanges(type = 'daily', skipCommit = '') {
 		}
 		reqIndex = 0;
 		var lbPromise = new Promise((resolve, reject) => {
-			getDataForNextIndex(resolve);
+			for (var i=0; i < maxNumOfReq; i++) {
+				getDataForNextIndex(resolve);
+			}
 		});
 		
 		lbPromise.then(function () {
 			console.log("All leaderboard data processed!");
-			fs.writeFile('testdrive.txt', JSON.stringify(usersData), function (err) {
-				if (err) throw err;
-				console.log('Saved!');
-			});
+			writeFiles();
+			console.log("All files written!");
 		});
 	});
 }
@@ -49,21 +49,24 @@ function loadChanges(type = 'daily', skipCommit = '') {
 function getDataForNextIndex(resolve) {
 	if (reqIndex >= validCards.length) {
 		if (numOfReq <= 0) {
-			resolve(index);
+			resolve();
 		}
 		return;
 	}
 	numOfReq++;
 	var cardId = validCards[reqIndex].id;
+	var cardName = validCards[reqIndex].name;
 	needle(fromPrefix + cardId).then(function (data) {
 		var lb = JSON.parse(data.body.leaderboard);
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
 		}
-		console.log("Data processed for: ", validCards[reqIndex].name);
+		console.log("Data processed for: " + cardName);
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
 		numOfReq--;
 		getDataForNextIndex(resolve);
+	}, function (err) {
+		throw err;
 	});
 	reqIndex++;
 }
@@ -79,6 +82,14 @@ function addLbDataToUser(data, rank) {
 		usersData[uid] = [];
 	}
 	usersData[uid].push(obj);
+}
+
+function writeFiles() {
+	for (var key in usersData) {
+		fs.writeFile("data/" + key + ".json", JSON.stringify(usersData[key]), function (err) {
+			if (err) throw err;
+		});
+	}
 }
 
 loadChanges(...process.argv.slice(2)).catch((e) => {
