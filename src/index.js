@@ -1,6 +1,6 @@
 const fs = require('fs');
 const needle = require('needle');
-const queue = require('better-queue');
+const queue = require('better-npm');
 	
 const {
 	access,
@@ -12,19 +12,22 @@ const {
 const allCardsFrom = "https://undercards.net/AllCards";
 const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=";
 
+var allCards = [];
 var validCards = [];
 var usersData = {};
 
 const maxNumOfReq = 5;
 var numOfReq = 0;
 var reqIndex = 0;
+var timestamp;
 
 function loadChanges(type = 'daily', skipCommit = '') {
 	return needle(allCardsFrom).then(function (data) {
-		var allCards = JSON.parse(data.body.cards);
+		allCards = JSON.parse(data.body.cards);
 		// Get all valid cards for Friendship Data.
 		validCards = [];
 		usersData = {};
+		timestamp = Date.now();
 		for (var i=0; i < allCards.length; i++) {
 			var card = allCards[i];
 			if (card.typeCard === 0 && card.rarity !== "TOKEN") {
@@ -38,10 +41,10 @@ function loadChanges(type = 'daily', skipCommit = '') {
 				getDataForNextIndex(resolve);
 			}
 		});
-		
+
 		lbPromise.then(function () {
 			console.log("All leaderboard data processed!");
-			writeFiles();
+			writeLatestCommitFile(writeFiles);
 		});
 	});
 }
@@ -79,9 +82,25 @@ function addLbDataToUser(data, rank) {
 		cardId : data.idCard
 	};
 	if (!usersData[uid]) {
-		usersData[uid] = [];
+		usersData[uid] = {
+			lastUpdated: timestamp,
+			username: data.user.username,
+			scores: []
+		};
 	}
-	usersData[uid].push(obj);
+	usersData[uid].scores.push(obj);
+}
+
+function writeLatestCommitFile(cb) {
+	var obj = {};
+	obj.lastUpdated = timestamp;
+	obj.validCardsLength = validCards.length;
+	obj.allCardsLength = allCards.length;
+	obj.usersDataLength = usersData.length;
+	fs.writeFile("latestCommit.json", JSON.stringify(obj), function (err) {
+		if (err) throw err;
+		cb();
+	});
 }
 
 function writeFiles() {
