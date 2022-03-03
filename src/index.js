@@ -1,6 +1,6 @@
 const fs = require('fs');
 const needle = require('needle');
-const queue = require('better-npm');
+const queue = require('better-queue');
 	
 const {
 	access,
