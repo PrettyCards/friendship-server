@@ -35,7 +35,7 @@ function loadChanges(type = 'daily', skipCommit = '') {
 				validCards.push(card);
 			}
 		}
-		validCards = validCards.sort((a, b) => (a.id - b.id));
+		// validCards = validCards.sort((a, b) => (a.id - b.id));
 		reqIndex = 0;
 		var lbPromise = new Promise((resolve, reject) => {
 			for (var i=0; i < maxNumOfReq; i++) {
