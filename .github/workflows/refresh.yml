@@ -1,10 +1,10 @@
 # Feildmaster is the actual mastermind behind this, as usual. :P
 
-name: Hourly Update
+name: Twice a Day Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30/60 * * * *" # Every hour
+    - cron: "22 6,18 * * *" # About 1 hour before reset
 jobs:
   run:
     runs-on: ubuntu-latest
