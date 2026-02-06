@@ -37,7 +37,7 @@ function fetch(uri) {
     //req.on("error", console.error.bind(console));
     if (body) req.write(body);
     req.end();
-  }).then(cookie => needle.get(`${new URL(uri, `https://${hostname}`)}`, {
+  }).then(cookie => needle('get', uri, {
     headers: { cookie },
   }));
 }
