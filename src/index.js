@@ -54,7 +54,6 @@ function getDataForNextIndex(resolve, reject) {
 	var cardId = validCards[reqIndex].id;
 	var cardName = validCards[reqIndex].name;
 	fetch(fromPrefix + cardId).then(function (data) {
-		console.log(data);
 		var lb = JSON.parse(data.body.leaderboard);
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
