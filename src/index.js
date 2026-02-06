@@ -61,7 +61,7 @@ function getDataForNextIndex(resolve, reject) {
 		console.log("Data processed for: " + cardName);
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
 		numOfReq--;
-		getDataForNextIndex(resolve);
+		getDataForNextIndex(resolve, reject);
 	}).catch(reject);
 	reqIndex++;
 }
