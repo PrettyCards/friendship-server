@@ -90,6 +90,7 @@ function writeLatestCommitFile(cb) {
 	obj.validCardsLength = validCards.length;
 	obj.allCardsLength = allCards.length;
 	obj.usersDataLength = usersData.length;
+	console.log('Saving latestCommit.json');
 	fs.writeFile("latestCommit.json", JSON.stringify(obj), function (err) {
 		if (err) throw err;
 		cb();
@@ -98,6 +99,7 @@ function writeLatestCommitFile(cb) {
 
 function writeFiles() {
 	var q = new queue(function(key, cb) {
+		console.log(`Saving ${key}.json`);
 		fs.writeFile("data/" + key + ".json", JSON.stringify(usersData[key]), function (err) {
 			if (err) throw err;
 			cb(null, err);
