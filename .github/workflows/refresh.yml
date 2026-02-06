@@ -19,6 +19,8 @@ jobs:
         run: npm install --production
       - name: Update
         run: npm start hourly
+        env:
+          UC_LOGIN: ${{ secrets.UC_LOGIN }}
       - name: Commit
         uses: EndBug/add-and-commit@v9
         with:

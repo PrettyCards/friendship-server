@@ -1,13 +1,8 @@
 const fs = require('fs');
 const needle = require('needle');
 const queue = require('better-queue');
-	
-const {
-	access,
-	readFile,
-	writeFile,
-	mkdir,
-} = fs.promises;
+
+const fetch = require('./fetch.js');
 
 const allCardsFrom = "https://undercards.net/AllCards";
 const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=";
@@ -60,7 +55,7 @@ function getDataForNextIndex(resolve) {
 	numOfReq++;
 	var cardId = validCards[reqIndex].id;
 	var cardName = validCards[reqIndex].name;
-	needle(fromPrefix + cardId).then(function (data) {
+	fetch(fromPrefix + cardId).then(function (data) {
 		var lb = JSON.parse(data.body.leaderboard);
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
