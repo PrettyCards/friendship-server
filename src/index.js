@@ -32,20 +32,18 @@ function loadChanges(type = 'daily', skipCommit = '') {
 		}
 		// validCards = validCards.sort((a, b) => (a.id - b.id));
 		reqIndex = 0;
-		var lbPromise = new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			for (var i=0; i < maxNumOfReq; i++) {
-				getDataForNextIndex(resolve);
+				getDataForNextIndex(resolve, reject);
 			}
-		});
-
-		lbPromise.then(function () {
+		}).then(function () {
 			console.log("All leaderboard data processed!");
 			writeLatestCommitFile(writeFiles);
 		});
 	});
 }
 
-function getDataForNextIndex(resolve) {
+function getDataForNextIndex(resolve, reject) {
 	if (reqIndex >= validCards.length) {
 		if (numOfReq <= 0) {
 			resolve();
@@ -56,6 +54,7 @@ function getDataForNextIndex(resolve) {
 	var cardId = validCards[reqIndex].id;
 	var cardName = validCards[reqIndex].name;
 	fetch(fromPrefix + cardId).then(function (data) {
+		console.log(data.body);
 		var lb = JSON.parse(data.body.leaderboard);
 		for (var i=0; i < lb.length; i++) {
 			addLbDataToUser(lb[i], i+1);
@@ -64,9 +63,7 @@ function getDataForNextIndex(resolve) {
 		//console.log(validCards[index].name, lb[0].user.username, lb[0].xp);
 		numOfReq--;
 		getDataForNextIndex(resolve);
-	}, function (err) {
-		throw err;
-	});
+	}, reject);
 	reqIndex++;
 }
 
