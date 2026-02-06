@@ -1,6 +1,8 @@
 const https = require('https');
 const needle = require('needle');
 
+let session;
+
 function fetch(uri) {
   const body = process.env.UC_LOGIN;
   if (!body) {
@@ -26,12 +28,16 @@ function fetch(uri) {
     },
   };
   return new Promise((resolve, reject) => {
+    if (session) {
+      resolve(session);
+      return;
+    }
     const req = https.request(options, res => {
       if (res.statusCode !== 302 && res.statusCode !== 200) {
         reject(res);
       } else {
-        const cookie = `${res.headers['set-cookie'].map(cookie => cookie.split(';')[0]).join('; ')};`;
-        resolve(cookie);
+        session = `${res.headers['set-cookie'].map(cookie => cookie.split(';')[0]).join('; ')};`;
+        resolve(session);
       }
     });
     //req.on("error", console.error.bind(console));
@@ -39,7 +45,10 @@ function fetch(uri) {
     req.end();
   }).then(cookie => needle('get', uri, {
     headers: { cookie },
-  }));
+  })).catch(err => {
+    session = null;
+    throw err;
+  });
 }
 
 module.exports = fetch;
