@@ -1,5 +1,6 @@
 const https = require('https');
 const needle = require('needle');
+const agent = require('./proxy.js');
 
 let session;
 
@@ -14,6 +15,7 @@ function fetch(uri) {
     port: 443,
     path: encodeURI('/SignIn'),
     method: 'POST',
+    agent,
     headers: {
       Accept: '*/*',
       'Accept-Encoding': 'gzip, deflate, br',
@@ -45,6 +47,7 @@ function fetch(uri) {
     req.end();
   }).then(cookie => needle('get', uri, {
     headers: { cookie },
+    agent,
   })).catch(err => {
     session = null;
     throw err;

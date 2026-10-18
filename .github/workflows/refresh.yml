@@ -7,20 +7,30 @@ on:
     - cron: "22 6,18 * * *" # About 1 hour before reset
 jobs:
   run:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Node setup
-        uses: actions/setup-node@v2-beta
+        uses: actions/setup-node@v5
         with:
-          node-version: '12'
+          node-version: 24
       - name: Install
-        run: npm install --production
+        run: npm clean-install --omit=dev
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tags: tag:ci-proxy
       - name: Update
         run: npm start hourly
         env:
           UC_LOGIN: ${{ secrets.UC_LOGIN }}
+          ALL_PROXY: socks5h://100.115.6.118:1080
       - name: Commit
         uses: EndBug/add-and-commit@v9
         with:

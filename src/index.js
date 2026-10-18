@@ -3,6 +3,7 @@ const needle = require('needle');
 const queue = require('better-queue');
 
 const fetch = require('./fetch.js');
+const agent = require('./proxy.js');
 
 const allCardsFrom = "https://undercards.net/AllCards";
 const fromPrefix = "https://undercards.net/Leaderboard?action=friendship&idCard=";
@@ -17,7 +18,7 @@ var reqIndex = 0;
 var timestamp;
 
 function loadChanges(type = 'daily', skipCommit = '') {
-	return needle(allCardsFrom).then(function (data) {
+	return needle(allCardsFrom, { agent }).then(function (data) {
 		allCards = JSON.parse(data.body.cards);
 		// Get all valid cards for Friendship Data.
 		validCards = [];
